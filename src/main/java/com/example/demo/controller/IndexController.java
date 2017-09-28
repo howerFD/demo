@@ -10,9 +10,9 @@ import org.mybatis.generator.internal.DefaultShellCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import java.io.File;
 import java.io.IOException;
@@ -35,15 +35,25 @@ public class IndexController {
         return "index";
     }
 
-    @RequestMapping(value = "gen", method = RequestMethod.POST)
-    public void gen(HttpServletRequest req,
-            HttpServletResponse res, @RequestParam String tableItems, @RequestParam String modelNames) throws IOException {
+    @RequestMapping(value = "/generate", method = RequestMethod.POST)
+    public void generate(@RequestBody GeneratorParam param,
+            HttpServletRequest req, HttpServletResponse res) throws IOException {
 
-        GeneratorParam param = new GeneratorParam();
+        if (!"".equals(param.getTableNamesString()) && !"".equals(param.getModelNamesString())) {
 
-        if (!"".equals(tableItems) && !"".equals(modelNames)) {
-            param.setTableNames(tableItems.split(","));
-            param.setModelNames(modelNames.split(","));
+            List<String> tableNames = new ArrayList<String>();
+            String[] tableNameString = param.getTableNamesString().split(",");
+            for(int i = 0;  i< tableNameString.length; i++){
+                tableNames.add(tableNameString[i]);
+            }
+            List<String> modelNames = new ArrayList<String>();
+            String[] modelNameString = param.getModelNamesString().split(",");
+            for(int i = 0;  i< modelNameString.length; i++){
+                modelNames.add(modelNameString[i]);
+            }
+
+            param.setTableNames(tableNames);
+            param.setModelNames(modelNames);
         }
 
         List<String> warnings = new ArrayList<>();
@@ -52,9 +62,9 @@ public class IndexController {
         // 准备 配置文件
         String srcDirName = UUID.randomUUID().toString().replaceAll("-", "");
         String webRoot = "";
-        param.setBuildPath(webRoot + "/" + srcDirName);
         String config_path = "/mybatis-conf.xml";
-        File configFile = new File(webRoot + config_path);
+        param.setBuildPath(webRoot + "/" + srcDirName);
+        File configFile = new File(IndexController.class.getResource(config_path).getPath());
         try {
             // 1.创建 配置解析器
             ConfigurationParser parser = new ConfigurationParser(warnings);
@@ -76,15 +86,15 @@ public class IndexController {
             }
 
             byte[] fileByte = GeneratorUtils.zipFodler(param.getBuildPath(), webRoot + "/static/temp/" + srcDirName + ".zip");
-            Executors.newFixedThreadPool(1).submit(() -> {
-                try {
-                    TimeUnit.SECONDS.sleep(3);
-                    GeneratorUtils.deleteDir(new File(webRoot + "/" + srcDirName));
-                } catch (Exception e) {
-                    LOGGER.error("异步删除失败", e);
-                }
-            });
             DownFileUtils.writeResponse(req, res, fileByte, srcDirName + ".zip");
+//            Executors.newFixedThreadPool(1).submit(() -> {
+//                try {
+//                    TimeUnit.SECONDS.sleep(3);
+//                    GeneratorUtils.deleteDir(new File(webRoot + "/" + srcDirName));
+//                } catch (Exception e) {
+//                    LOGGER.error("异步删除失败", e);
+//                }
+//            });
         } catch (Exception e) {
             LOGGER.error("", e);
         }
@@ -102,12 +112,14 @@ public class IndexController {
 
         // 注释
         CommentGeneratorConfiguration cgc = context.getCommentGeneratorConfiguration();
-        cgc.setConfigurationType("io.github.biezhi.onmybatis.utils.QnloftCommentGenerator");
+        cgc.setConfigurationType("cpm.example.demo.utils.QnloftCommentGenerator");
 
         // 配置数据库属性
         JDBCConnectionConfiguration jdbcConnectionConfiguration = context.getJdbcConnectionConfiguration();
 
-        String connection = "jdbc:mysql://" + param.getConnection() + ":" + param.getPort() + "/" + param.getDataBase();
+        jdbcConnectionConfiguration.setDriverClass("org.postgresql.Driver");
+
+        String connection = "jdbc:postgresql://" + param.getConnection() + ":" + param.getPort() + "/" + param.getDataBase();
         jdbcConnectionConfiguration.setConnectionURL(connection);
         jdbcConnectionConfiguration.setUserId(param.getUserId());
         jdbcConnectionConfiguration.setPassword(param.getUserPass());
@@ -137,14 +149,14 @@ public class IndexController {
         context.addPluginConfiguration(sp);
 
         PluginConfiguration abp = new PluginConfiguration();
-        abp.setConfigurationType("io.github.biezhi.onmybatis.plugins.AddAliasToBaseColumnListPlugin");
+        abp.setConfigurationType("com.example.demo.plugins.AddAliasToBaseColumnListPlugin");
         context.addPluginConfiguration(abp);
 
         PluginConfiguration pcf = new PluginConfiguration();
-        pcf.setConfigurationType("io.github.biezhi.onmybatis.plugins.MapperPlugin");
+        pcf.setConfigurationType("com.example.demo.plugins.MapperPlugin");
 
         if (!"".equals(param.getMapperPlugin())) {
-            pcf.addProperty("mappers", "com.kongzhong.base.BaseMapper");
+            pcf.addProperty("mappers", "com.example.demo.BaseMapper");
         } else {
             tc.setSelectByExampleStatementEnabled(true);
             tc.setDeleteByPrimaryKeyStatementEnabled(true);
@@ -156,15 +168,15 @@ public class IndexController {
         context.getTableConfigurations().clear();
         context.getTableConfigurations().add(tc);
 
-        if ((param.getTableNames() != null) && (0 < param.getTableNames().length)) {
+        if ((param.getTableNames() != null) && (0 < param.getTableNames().size())) {
             //表集合
             List<TableConfiguration> tableConfigurations = context.getTableConfigurations();
             tableConfigurations.clear();
-            for (int i = 0; i < param.getTableNames().length; i++) {
-                if (!"".equals(param.getTableNames()[i]) && !"".equals(param.getModelNames()[i])) {
+            for (int i = 0; i < param.getTableNames().size(); i++) {
+                if (!"".equals(param.getTableNames().get(i)) && !"".equals(param.getModelNames().get(i))) {
                     TableConfiguration tableConfiguration = new TableConfiguration(context);
-                    tableConfiguration.setTableName(param.getTableNames()[i]);
-                    tableConfiguration.setDomainObjectName(param.getModelNames()[i]);
+                    tableConfiguration.setTableName(param.getTableNames().get(i));
+                    tableConfiguration.setDomainObjectName(param.getModelNames().get(i));
                     tableConfiguration.setCountByExampleStatementEnabled(true);
                     tableConfiguration.setDeleteByExampleStatementEnabled(true);
                     tableConfiguration.setSelectByExampleStatementEnabled(true);

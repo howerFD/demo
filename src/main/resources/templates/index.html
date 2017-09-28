@@ -8,8 +8,8 @@
     <link href="//cdn.bootcss.com/spectre.css/0.2.11/spectre.min.css" rel="stylesheet"/>
     <link href="//cdn.bootcss.com/spectre.css/0.2.11/spectre-icons.min.css" rel="stylesheet"/>
     <link href="//cdn.bootcss.com/spectre.css/0.2.11/spectre-exp.min.css" rel="stylesheet"/>
-    <link rel="stylesheet" type="text/css" href="/static/css/style.css?v=0.0.1"/>
-    <link rel="shortcut icon" href="/static/img/favicon.ico?v=0.0.1"/>
+    <link rel="stylesheet" type="text/css" href="./css/style.css?v=0.0.1"/>
+    <link rel="shortcut icon" href="./img/favicon.ico?v=0.0.1"/>
 </head>
 
 <body>
@@ -19,20 +19,20 @@
         <div class="column col-10 col-xs-12" style="margin: 0 auto;">
             <form class="form-horizontal" action="#forms" id="config-form">
 
-                <input id="tableItems" name="tableItems" type="hidden"/>
-                <input id="modelNames" name="modelNames" type="hidden"/>
+                <input id="tableNamesString" name="tableNamesString" type="hidden"/>
+                <input id="modelNamesString" name="modelNamesString" type="hidden"/>
 
                 <div class="form-group">
                     <div class="col-5">
                         <label class="form-label">数据库连接</label>
                         <input class="form-input" type="text" placeholder="127.0.0.1" id="connection"
-                               name="p.connection"
+                               name="connection"
                                value="127.0.0.1" required = "true"/>
                     </div>
                     <div class="col-1">&nbsp;</div>
                     <div class="col-6">
                         <label class="form-label">数据库端口</label>
-                        <input class="form-input" type="text" placeholder="3306" id="port" name="p.port"
+                        <input class="form-input" type="text" placeholder="3306" id="port" name="port"
                                value="3306" required = "true"/>
                     </div>
                 </div>
@@ -40,7 +40,7 @@
                 <div class="form-group">
                     <div class="col-5">
                         <label class="form-label">数据库名</label>
-                        <input class="form-input" type="text" placeholder="请输入数据库名" id="dataBase" name="p.dataBase"
+                        <input class="form-input" type="text" placeholder="请输入数据库名" id="dataBase" name="dataBase"
                                required = "true"/>
                     </div>
                     <div class="col-1">&nbsp;</div>
@@ -51,13 +51,13 @@
                 <div class="form-group">
                     <div class="col-5">
                         <label class="form-label">用户名</label>
-                        <input class="form-input" type="text" placeholder="请输入用户名" id="userId" name="p.userId"
+                        <input class="form-input" type="text" placeholder="请输入用户名" id="userId" name="userId"
                                required = "true"/>
                     </div>
                     <div class="col-1">&nbsp;</div>
                     <div class="col-6">
                         <label class="form-label">用户密码</label>
-                        <input class="form-input" type="text" placeholder="请输入用户密码" id="userPass" name="p.userPass"
+                        <input class="form-input" type="text" placeholder="请输入用户密码" id="userPass" name="userPass"
                                required = "true"/>
                     </div>
                 </div>
@@ -65,35 +65,35 @@
                 <div class="form-group">
                     <div class="col-5">
                         <label class="form-label">实体所属包名</label>
-                        <input class="form-input" type="text" placeholder="com.exmaple.entity" id="modelPath"
-                               name="p.modelPath" required = "required"/>
+                        <input class="form-input" type="text" placeholder="com.example.demo.entity" id="modelPath"
+                               name="modelPath" required = "required"/>
                     </div>
                     <div class="col-1">&nbsp;</div>
                     <div class="col-6">
                         <label class="form-label">Mapper接口所属包名</label>
-                        <input class="form-input" type="text" placeholder="com.exmaple.mapper" id="mapperPath"
-                               name="p.mapperPath" required = "required"/>
+                        <input class="form-input" type="text" placeholder="com.example.demo.mapper" id="mapperPath"
+                               name="mapperPath" required = "required"/>
                     </div>
                 </div>
 
                 <div class="form-group">
                     <div class="col-5">
                         <label class="form-label">MapperXml所属路径(classpath下)</label>
-                        <input class="form-input" type="text" placeholder="com/kongzhong/mapper" id="mappingPath"
-                               name="p.mappingPath"
+                        <input class="form-input" type="text" placeholder="com.example.demo.mapper" id="mappingPath"
+                               name="mappingPath"
                                required = "required"/>
                     </div>
                     <div class="col-1">&nbsp;</div>
                     <div class="col-6">
                         <label class="form-label">Mybatis Mapper插件</label>
                         <input class="form-input" type="text" placeholder="输入Mapper基础接口，没有则不填" id="mapperPlugin"
-                               name="p.mapperPlugin"/>
+                               name="mapperPlugin"/>
                     </div>
                 </div>
 
                 <div class="form-group">
                     <div class="col-5">
-                        <input type="hidden" name="p.isHump" value="1" id="isHump"
+                        <input type="hidden" name="isHump" value="1" id="isHump"
                                onchange="changeCkbox(this, 'isHump')"/>
                         <label class="form-switch">
                             <input type="checkbox" checked="checked"/>
@@ -102,7 +102,7 @@
                     </div>
                     <div class="col-1">&nbsp;</div>
                     <div class="col-6">
-                        <input type="hidden" name="p.isAlltable" value="1" id="isAlltable"/>
+                        <input type="hidden" name="isAlltable" value="1" id="isAlltable"/>
                         <label class="form-switch">
                             <input type="checkbox" checked ="checked" onchange="changeCkbox(this, 'isAlltable')"/>
                             <i class="form-icon"></i> 是否生成所有表
@@ -139,10 +139,10 @@
     </div>
 </div>
 
-<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
-<script src="//cdn.bootcss.com/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
-<script src="//cdn.bootcss.com/jquery.form/4.2.1/jquery.form.min.js"></script>
-<script src="//cdn.bootcss.com/jquery-validate/1.16.0/jquery.validate.min.js"></script>
-<script src="/static/js/index.js?v=0.0.1"></script>
+<script src="http://cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+<script src="http://cdn.bootcss.com/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+<script src="http://cdn.bootcss.com/jquery.form/4.2.1/jquery.form.min.js"></script>
+<script src="http://cdn.bootcss.com/jquery-validate/1.16.0/jquery.validate.min.js"></script>
+<script src="./js/index.js?v=0.0.1"></script>
 </body>
 </html>

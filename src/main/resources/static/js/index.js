@@ -38,14 +38,27 @@ function doSubmit() {
             tableItems.push(tableName);
             modelNames.push(modelName);
         });
-        $("#config-form #tableItems").val(tableItems.join(','));
-        $("#config-form #modelNames").val(modelNames.join(','));
+        $("#config-form #tableNamesString").val(tableItems.join(','));
+        $("#config-form #modelNamesString").val(modelNames.join(','));
     }
 
+    (function($){
+        $.fn.serializeJson=function(){
+            var serializeObj={};
+            $(this.serializeArray()).each(function(){
+                serializeObj[this.name]=this.value;
+            });
+            return serializeObj;
+        };
+    })(jQuery);
+
     $.ajax({
-        type: 'post',
-        url: '/gen',
-        data: $("#config-form").serialize(),
+        url: '/demo/generate',
+        type: 'POST',
+        dataType:"json",
+        data: JSON.stringify($("#config-form").serializeJson()),
+        contentType:"application/json;charset=utf-8",
+        async: false,
         success: function (result) {
             $("#submitBtn").removeAttr("disabled");
             if (result && result.success) {
