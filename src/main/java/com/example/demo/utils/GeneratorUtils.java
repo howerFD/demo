@@ -16,6 +16,7 @@ public final class GeneratorUtils {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
 
         try {
+//            FileOutputStream fos = new FileOutputStream(new File(outputFileName));
             ZipOutputStream zos = new ZipOutputStream(bos);
 
             //level - the compression level (0-9)

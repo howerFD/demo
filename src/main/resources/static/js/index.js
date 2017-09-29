@@ -42,6 +42,7 @@ function doSubmit() {
         $("#config-form #modelNamesString").val(modelNames.join(','));
     }
 
+    // 转成对象
     (function($){
         $.fn.serializeJson=function(){
             var serializeObj={};
@@ -55,19 +56,109 @@ function doSubmit() {
     $.ajax({
         url: '/demo/generate',
         type: 'POST',
-        dataType:"json",
         data: JSON.stringify($("#config-form").serializeJson()),
         contentType:"application/json;charset=utf-8",
         async: false,
-        success: function (result) {
+        success: function (data, status, xhr) {
             $("#submitBtn").removeAttr("disabled");
-            if (result && result.success) {
-                window.open(result.payload);
-            } else {
-                alert(result.msg || "操作失败");
-            }
+            console.log(data); // ajax方式请求的数据只能存放在javascipt内存空间，可以通过javascript访问，但是无法保存到硬盘
+            console.log(status);
+            console.log(xhr);
+            console.log("=====================");
+
+            downloadFile(data, xhr.getResponseHeader);
         }
     });
+}
+
+var getMineType = function(headers, defMineType) {
+    return headers('content-type') || defMineType;
+};
+
+var getFileName = function(headers, defFileName) {
+    var contentDisposition = decodeURI(headers('Content-Disposition'));
+    // Firefox, Opera, Chrome
+    var fileName = contentDisposition.replace(new RegExp('(\\S+UTF-8\\\'\\\')',"gm"),'');
+    // IE
+    fileName = fileName.replace(new RegExp('(\\S+filename\\=\\")',"gm"),'');
+    if(fileName.lastIndexOf('"') == fileName.length - 1) {
+        fileName = fileName.subString(0, fileName.length - 1);
+    }
+
+    return fileName || defFileName;
+};
+
+
+var downloadFile =  function (data, headers, mimeType, fileName) {
+    var success = false;
+    mimeType = getMineType(headers, mimeType);
+    fileName = getFileName(headers, fileName);
+    var blob = new Blob([data], { type: mimeType });
+    try {
+        if (navigator.msSaveBlob)
+            navigator.msSaveBlob(blob, fileName);
+        else {
+            // Try using other saveBlob implementations, if available
+            var saveBlob = navigator.webkitSaveBlob || navigator.mozSaveBlob || navigator.saveBlob;
+            if (saveBlob === undefined) throw "Not supported";
+            saveBlob(blob, fileName);
+        }
+        success = true;
+    } catch (ex) {
+        console.log("saveBlob method failed with the following exception:");
+        console.log(ex);
+    }
+
+    if (!success) {
+        // Get the blob url creator
+        var urlCreator = window.URL || window.webkitURL || window.mozURL || window.msURL;
+        if (urlCreator) {
+            // Try to use a download link
+            var link = document.createElement('a');
+            if ('download' in link) {
+                // Try to simulate a click
+                try {
+                    // Prepare a blob URL
+                    var url = urlCreator.createObjectURL(blob);
+                    link.setAttribute('href', url);
+
+                    // Set the download attribute (Supported in Chrome 14+ / Firefox 20+)
+                    link.setAttribute("download", fileName);
+
+                    // Simulate clicking the download link
+                    var event = document.createEvent('MouseEvents');
+                    event.initMouseEvent('click', true, true, window, 1, 0, 0, 0, 0, false, false, false, false, 0, null);
+                    link.dispatchEvent(event);
+                    success = true;
+
+                } catch (ex) {
+                    console.log("Download link method with simulated click failed with the following exception:");
+                    console.log(ex);
+                }
+            }
+
+            if (!success) {
+                // Fallback to window.location method
+                try {
+                    // Prepare a blob URL
+                    // Use application/octet-stream when using window.location to force download
+                    var url = urlCreator.createObjectURL(blob);
+                    window.location = url;
+                    console.log("Download link method with window.location succeeded");
+                    success = true;
+                } catch (ex) {
+                    console.log("Download link method with window.location failed with the following exception:");
+                    console.log(ex);
+                }
+            }
+        }
+    }
+
+    if (!success) {
+        // Fallback to window.open method
+        console.log("No methods worked for saving the arraybuffer, using last resort window.open");
+        window.open("", '_blank', '');
+    }
 }
 
 function changeCkbox(obj, id) {

@@ -1,19 +1,5 @@
 package com.example.demo.controller;
 
-import com.example.demo.model.GeneratorParam;
-import com.example.demo.utils.DownFileUtils;
-import com.example.demo.utils.GeneratorUtils;
-import org.mybatis.generator.api.MyBatisGenerator;
-import org.mybatis.generator.config.*;
-import org.mybatis.generator.config.xml.ConfigurationParser;
-import org.mybatis.generator.internal.DefaultShellCallback;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -23,6 +9,28 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import com.example.demo.model.GeneratorParam;
+import com.example.demo.utils.DownFileUtils;
+import com.example.demo.utils.GeneratorUtils;
+import org.mybatis.generator.api.MyBatisGenerator;
+import org.mybatis.generator.config.CommentGeneratorConfiguration;
+import org.mybatis.generator.config.Configuration;
+import org.mybatis.generator.config.Context;
+import org.mybatis.generator.config.JDBCConnectionConfiguration;
+import org.mybatis.generator.config.JavaClientGeneratorConfiguration;
+import org.mybatis.generator.config.JavaModelGeneratorConfiguration;
+import org.mybatis.generator.config.PluginConfiguration;
+import org.mybatis.generator.config.SqlMapGeneratorConfiguration;
+import org.mybatis.generator.config.TableConfiguration;
+import org.mybatis.generator.config.xml.ConfigurationParser;
+import org.mybatis.generator.internal.DefaultShellCallback;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 
 @Controller
 public class IndexController {
@@ -61,7 +69,7 @@ public class IndexController {
         boolean overwrite = true;
         // 准备 配置文件
         String srcDirName = UUID.randomUUID().toString().replaceAll("-", "");
-        String webRoot = "";
+        String webRoot = IndexController.class.getResource("/static/temp").getPath();
         String config_path = "/mybatis-conf.xml";
         param.setBuildPath(webRoot + "/" + srcDirName);
         File configFile = new File(IndexController.class.getResource(config_path).getPath());
@@ -85,16 +93,16 @@ public class IndexController {
                 LOGGER.error("", e);
             }
 
-            byte[] fileByte = GeneratorUtils.zipFodler(param.getBuildPath(), webRoot + "/static/temp/" + srcDirName + ".zip");
-            DownFileUtils.writeResponse(req, res, fileByte, srcDirName + ".zip");
-//            Executors.newFixedThreadPool(1).submit(() -> {
-//                try {
-//                    TimeUnit.SECONDS.sleep(3);
-//                    GeneratorUtils.deleteDir(new File(webRoot + "/" + srcDirName));
-//                } catch (Exception e) {
-//                    LOGGER.error("异步删除失败", e);
-//                }
-//            });
+            byte[] fileByte = GeneratorUtils.zipFodler(param.getBuildPath(), webRoot + "/" + srcDirName + ".zip");
+            DownFileUtils.writeResponse(req, res, fileByte, "new.zip");
+            Executors.newFixedThreadPool(1).submit(() -> {
+                try {
+                    TimeUnit.SECONDS.sleep(3);
+                    GeneratorUtils.deleteDir(new File(webRoot + "/" + srcDirName));
+                } catch (Exception e) {
+                    LOGGER.error("异步删除失败", e);
+                }
+            });
         } catch (Exception e) {
             LOGGER.error("", e);
         }
